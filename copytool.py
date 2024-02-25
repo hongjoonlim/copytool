@@ -1,16 +1,17 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinterdnd2 import DND_FILES, TkinterDnD
 
-class DragDropApp(tk.Tk):
+class DragDropApp:
     def __init__(self):
-        super().__init__()
-        self.title("Drag and Drop Demo")
-        self.geometry("600x400")
+        self.root = TkinterDnD.Tk()
+        self.root.title("Drag and Drop Demo")
+        self.root.geometry("600x400")
 
-        self.left_frame = tk.Frame(self, width=300, height=400, bg="lightgray")
+        self.left_frame = tk.Frame(self.root, width=300, height=400, bg="lightgray")
         self.left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.right_frame = tk.Frame(self, width=300, height=400, bg="lightblue")
+        self.right_frame = tk.Frame(self.root, width=300, height=400, bg="lightblue")
         self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         self.left_label = tk.Label(self.left_frame, text="Drop Files Here", bg="lightgray")
@@ -25,7 +26,9 @@ class DragDropApp(tk.Tk):
         self.base_folder_label = tk.Label(self.left_frame, text="", bg="lightgray")
         self.base_folder_label.pack()
 
-        self.left_frame.bind("<<Drop>>", self.drop)
+        # Bind drop event to handle files dropped onto the left frame's listbox
+        self.listbox.drop_target_register(DND_FILES)
+        self.listbox.dnd_bind('<<Drop>>', self.drop)
 
         self.copy_button = tk.Button(self.right_frame, text="Copy", command=self.copy_folder_name)
         self.copy_button.pack(pady=20)
@@ -41,11 +44,9 @@ class DragDropApp(tk.Tk):
 
     def drop(self, event):
         self.left_label.config(text="Dropped")
-        files = self.tk.splitlist(self.tk.call('::tk::DND::Dnd_Files', 'list', event.data))
-        for file in files:
-            if file.endswith('.zip') or file.endswith('.tar') or file.endswith('.gz') or file.endswith('.rar'):
-                continue
-            folder_name = file.split("/")[-1]  # Extracting folder name from the path
+        file_paths = event.data.split()  # Get dropped file paths
+        for file_path in file_paths:
+            folder_name = file_path.split("/")[-1]  # Extract folder name from the path
             self.listbox.insert(tk.END, folder_name)
 
     def copy_folder_name(self):
@@ -63,6 +64,9 @@ class DragDropApp(tk.Tk):
         self.destination_path = filedialog.askdirectory()
         self.destination_path_label.config(text="Destination Path: " + self.destination_path)
 
+    def run(self):
+        self.root.mainloop()
+
 if __name__ == "__main__":
     app = DragDropApp()
-    app.mainloop()
+    app.run()
